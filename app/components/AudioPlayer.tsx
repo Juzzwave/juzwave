@@ -11,17 +11,20 @@ export default function AudioPlayer({ track }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (audioRef.current) {
+      audioRef.current.volume = volume;
       audioRef.current.play().catch(error => {
         console.log('Autoplay prevented:', error);
         setIsPlaying(false);
       });
     }
-  }, [track.id]);
+  }, [track.id, volume]);
 
   const togglePlay = () => {
     if (isPlaying) {
@@ -63,6 +66,14 @@ export default function AudioPlayer({ track }: AudioPlayerProps) {
     
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
   };
 
   const formatTime = (time: number) => {
@@ -107,6 +118,29 @@ export default function AudioPlayer({ track }: AudioPlayerProps) {
             }}
           />
         </div>
+      </div>
+      <div className="relative">
+        <button
+          className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+          onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+        >
+          <span className="material-icons text-gray-400">
+            {volume === 0 ? 'volume_off' : volume < 0.5 ? 'volume_down' : 'volume_up'}
+          </span>
+        </button>
+        {showVolumeSlider && (
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-secondary border border-gray-800 rounded-lg shadow-xl">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+              className="w-24 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

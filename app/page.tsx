@@ -7,36 +7,7 @@ import { Track } from './types';
 import Image from 'next/image';
 import UploadModal from './components/UploadModal';
 
-const INITIAL_TRACKS: Track[] = [
-  {
-    id: '1',
-    title: 'Summer Vibes',
-    description: 'Chill summer beat perfect for your next track',
-    coverImage: '/images/summer-vibes.jpg',
-    audioUrl: 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav',
-    price: 29.99,
-    type: 'beat',
-    tags: ['summer', 'chill', 'hip-hop'],
-    createdAt: new Date(),
-    userId: '1',
-    plays: 1200,
-    likes: 340
-  },
-  {
-    id: '2',
-    title: 'Night Drive',
-    description: 'Deep house vibes for late night drives',
-    coverImage: '/images/night-drive.jpg',
-    audioUrl: 'https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand60.wav',
-    price: 34.99,
-    type: 'beat',
-    tags: ['house', 'electronic', 'night'],
-    createdAt: new Date(),
-    userId: '1',
-    plays: 800,
-    likes: 220
-  }
-];
+const INITIAL_TRACKS: Track[] = [];
 
 export default function Home() {
   const [filter, setFilter] = useState('all');
@@ -146,16 +117,31 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {sortedTracks.map((track) => (
-            <TrackCard 
-              key={track.id} 
-              track={track} 
-              onPlay={() => handlePlayTrack(track)}
-              onDelete={() => handleDeleteTrack(track.id)}
-            />
-          ))}
-        </div>
+        {tracks.length === 0 ? (
+          <div className="text-center py-12">
+            <span className="material-icons text-gray-600 text-6xl mb-4">music_note</span>
+            <h2 className="text-2xl font-bold text-gray-400 mb-2">No tracks yet</h2>
+            <p className="text-gray-500 mb-4">Upload your first track to get started</p>
+            <button 
+              className="bg-primary hover:bg-primary/90 px-6 py-2 rounded-full transition-colors flex items-center gap-2 mx-auto"
+              onClick={() => setIsUploadModalOpen(true)}
+            >
+              <span className="material-icons">add</span>
+              Upload Beat
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sortedTracks.map((track) => (
+              <TrackCard 
+                key={track.id} 
+                track={track} 
+                onPlay={() => handlePlayTrack(track)}
+                onDelete={() => handleDeleteTrack(track.id)}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       {/* Footer Player */}
@@ -210,10 +196,7 @@ export default function Home() {
               )}
             </div>
             <div className="flex items-center gap-4 min-w-[120px]">
-              <button className={`p-2 hover:bg-gray-800 rounded-full ${!currentTrack && 'opacity-50 cursor-not-allowed'}`} disabled={!currentTrack}>
-                <span className="material-icons text-gray-400">volume_up</span>
-              </button>
-              <button className={`p-2 hover:bg-gray-800 rounded-full ${!currentTrack && 'opacity-50 cursor-not-allowed'}`} disabled={!currentTrack}>
+              <button className="p-2 hover:bg-gray-800 rounded-full">
                 <span className="material-icons text-gray-400">playlist_play</span>
               </button>
             </div>
