@@ -1,101 +1,231 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import TrackCard from './components/TrackCard';
+import AudioPlayer from './components/AudioPlayer';
+import { Track } from './types';
+import Image from 'next/image';
+import UploadModal from './components/UploadModal';
+
+const INITIAL_TRACKS: Track[] = [
+  {
+    id: '1',
+    title: 'Summer Vibes',
+    description: 'Chill summer beat perfect for your next track',
+    coverImage: '/images/summer-vibes.jpg',
+    audioUrl: 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav',
+    price: 29.99,
+    type: 'beat',
+    tags: ['summer', 'chill', 'hip-hop'],
+    createdAt: new Date(),
+    userId: '1',
+    plays: 1200,
+    likes: 340
+  },
+  {
+    id: '2',
+    title: 'Night Drive',
+    description: 'Deep house vibes for late night drives',
+    coverImage: '/images/night-drive.jpg',
+    audioUrl: 'https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand60.wav',
+    price: 34.99,
+    type: 'beat',
+    tags: ['house', 'electronic', 'night'],
+    createdAt: new Date(),
+    userId: '1',
+    plays: 800,
+    likes: 220
+  }
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [filter, setFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [tracks, setTracks] = useState<Track[]>(INITIAL_TRACKS);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const handlePlayTrack = (track: Track) => {
+    setCurrentTrack(track);
+  };
+
+  const handleUploadTrack = (newTrack: Track) => {
+    setTracks(prevTracks => [newTrack, ...prevTracks]);
+  };
+
+  const handleDeleteTrack = (trackId: string) => {
+    setTracks(prevTracks => prevTracks.filter(track => track.id !== trackId));
+    if (currentTrack?.id === trackId) {
+      setCurrentTrack(null);
+    }
+  };
+
+  // Фильтрация треков
+  const filteredTracks = tracks.filter(track => {
+    if (filter === 'all') return true;
+    return track.type === filter;
+  });
+
+  // Сортировка треков
+  const sortedTracks = [...filteredTracks].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      case 'popular':
+        return b.plays - a.plays;
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      default:
+        return 0;
+    }
+  });
+
+  return (
+    <div className="min-h-screen pb-24">
+      <div className="main-background" />
+      {/* Header */}
+      <header className="bg-secondary/80 backdrop-blur-sm py-4 sticky top-0 z-50 border-b border-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <span className="material-icons text-primary text-3xl">album</span>
+              <span className="text-2xl font-bold text-white">DJuzzwave</span>
+            </div>
+
+            {/* Upload Button */}
+            <button 
+              className="bg-primary hover:bg-primary/90 px-6 py-2 rounded-full transition-colors flex items-center gap-2"
+              onClick={() => setIsUploadModalOpen(true)}
+            >
+              <span className="material-icons">add</span>
+              Upload Beat
+            </button>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button 
+                className={`px-4 py-2 rounded-full transition-colors ${filter === 'all' ? 'bg-primary text-white' : 'bg-gray-800/50 text-gray-300 hover:bg-gray-800'}`} 
+                onClick={() => setFilter('all')}
+              >
+                All Beats
+              </button>
+              <button 
+                className={`px-4 py-2 rounded-full transition-colors ${filter === 'beats' ? 'bg-primary text-white' : 'bg-gray-800/50 text-gray-300 hover:bg-gray-800'}`} 
+                onClick={() => setFilter('beats')}
+              >
+                Featured
+              </button>
+              <button 
+                className={`px-4 py-2 rounded-full transition-colors ${filter === 'tracks' ? 'bg-primary text-white' : 'bg-gray-800/50 text-gray-300 hover:bg-gray-800'}`} 
+                onClick={() => setFilter('tracks')}
+              >
+                New Releases
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400">Sort by:</span>
+              <select 
+                className="bg-gray-800/50 px-4 py-2 rounded-full text-sm border-none outline-none cursor-pointer"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="newest">Newest</option>
+                <option value="popular">Most Popular</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {sortedTracks.map((track) => (
+            <TrackCard 
+              key={track.id} 
+              track={track} 
+              onPlay={() => handlePlayTrack(track)}
+              onDelete={() => handleDeleteTrack(track.id)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          ))}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer Player */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-secondary/95 backdrop-blur-sm border-t border-gray-800">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 min-w-[200px]">
+              <div className="w-12 h-12 relative bg-gray-800 rounded">
+                {currentTrack ? (
+                  <Image
+                    src={currentTrack.coverImage}
+                    alt={currentTrack.title}
+                    fill
+                    className="object-cover rounded"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="material-icons text-gray-600">music_note</span>
+                  </div>
+                )}
+              </div>
+              <div>
+                <h4 className="font-medium truncate">
+                  {currentTrack ? currentTrack.title : 'No track selected'}
+                </h4>
+                <p className="text-sm text-gray-400">
+                  {currentTrack ? currentTrack.type : 'Select a track to play'}
+                </p>
+              </div>
+            </div>
+            <div className="flex-1 max-w-4xl">
+              {currentTrack ? (
+                <AudioPlayer track={currentTrack} />
+              ) : (
+                <div className="flex items-center gap-4">
+                  <button
+                    className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center opacity-50 cursor-not-allowed"
+                    disabled
+                  >
+                    <span className="material-icons text-2xl">play_arrow</span>
+                  </button>
+                  <div className="flex-1">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>0:00</span>
+                      <span>0:00</span>
+                    </div>
+                    <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-gray-600 rounded-full w-0" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-4 min-w-[120px]">
+              <button className={`p-2 hover:bg-gray-800 rounded-full ${!currentTrack && 'opacity-50 cursor-not-allowed'}`} disabled={!currentTrack}>
+                <span className="material-icons text-gray-400">volume_up</span>
+              </button>
+              <button className={`p-2 hover:bg-gray-800 rounded-full ${!currentTrack && 'opacity-50 cursor-not-allowed'}`} disabled={!currentTrack}>
+                <span className="material-icons text-gray-400">playlist_play</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </footer>
+
+      <UploadModal 
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUpload={handleUploadTrack}
+      />
     </div>
   );
 }
